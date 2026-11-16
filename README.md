@@ -19,7 +19,7 @@ RESTful API backend for a modern blogging platform built with Django and Django 
 ```text
 blog_api/
 ├── apps/
-│   ├── auths/             # Custom user model, managers, services
+│   ├── auths/             # Custom user model, managers
 │   └── blog/              # Categories, tags, posts, comments
 ├── docs/
 │   └── erd.svg            # Architecture entity relationship diagram

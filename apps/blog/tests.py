@@ -2,8 +2,14 @@ from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from apps.blog.models import Category, Comment, Post, PostStatus, Tag
-from apps.blog.services import get_posts_by_author
+from apps.blog.models import (
+    Category,
+    Comment,
+    Post,
+    PostStatus,
+    Tag,
+    get_posts_by_author,
+)
 
 User = get_user_model()
 
@@ -85,7 +91,7 @@ class BlogModelTests(TestCase):
         self.assertIn("Comment by", str(comment))
         self.assertIsNotNone(comment.created_at)
 
-    def test_get_posts_by_author_service(self) -> None:
+    def test_get_posts_by_author(self) -> None:
         post = Post.objects.create(
             author=self.user,
             title="First Post",

@@ -1,8 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from apps.auths.services import create_user
-
 User = get_user_model()
 
 
@@ -10,7 +8,12 @@ class CustomUserModelTests(TestCase):
     def test_create_user_successful(self) -> None:
         email: str = "TestUser@Example.COM"
         password: str = "securepassword123"
-        user = create_user(email=email, password=password)
+        user = User.objects.create_user(
+            email=email,
+            password=password,
+            first_name="Test",
+            last_name="User",
+        )
 
         self.assertEqual(user.email, "testuser@example.com")
         self.assertTrue(user.check_password(password))

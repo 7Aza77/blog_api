@@ -13,9 +13,7 @@ INSTALLED_APPS: list[str] = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Third party
     "rest_framework",
-    # Local apps
     "apps.auths",
     "apps.blog",
 ]
