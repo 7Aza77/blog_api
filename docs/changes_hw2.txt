@@ -1,0 +1,877 @@
+
+--------------------------------------------------------------------------------
+FILE: requirements/base.txt
+--------------------------------------------------------------------------------
+Django==5.2.19
+django-unfold==0.91.0
+djangorestframework==3.18.3
+python-decouple==3.8
+
+
+--------------------------------------------------------------------------------
+FILE: requirements/dev.txt
+--------------------------------------------------------------------------------
+-r base.txt
+Faker==40.54.0
+ruff==0.17.5
+
+
+--------------------------------------------------------------------------------
+FILE: settings/base.py
+(added: unfold INSTALLED_APPS entries, full UNFOLD config dict with SITE_TITLE,
+SITE_HEADER, SITE_SUBHEADER, SITE_SYMBOL, COLORS, ENVIRONMENT, SITE_DROPDOWN,
+COMMAND, SIDEBAR, TABS)
+--------------------------------------------------------------------------------
+from pathlib import Path
+
+from django.urls import reverse_lazy
+
+from settings import conf
+
+BASE_DIR: Path = conf.BASE_DIR
+SECRET_KEY: str = conf.SECRET_KEY
+ALLOWED_HOSTS: list[str] = conf.ALLOWED_HOSTS
+
+INSTALLED_APPS: list[str] = [
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'rest_framework',
+    'apps.auths',
+    'apps.blog',
+]
+
+MIDDLEWARE: list[str] = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF: str = 'settings.urls'
+
+TEMPLATES: list[dict] = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION: str = 'settings.wsgi.application'
+ASGI_APPLICATION: str = 'settings.asgi.application'
+
+AUTH_USER_MODEL: str = 'auths.User'
+
+AUTH_PASSWORD_VALIDATORS: list[dict] = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+LANGUAGE_CODE: str = 'en-us'
+TIME_ZONE: str = 'UTC'
+USE_I18N: bool = True
+USE_TZ: bool = True
+
+STATIC_URL: str = 'static/'
+STATIC_ROOT: Path = BASE_DIR / 'staticfiles'
+
+MEDIA_URL: str = 'media/'
+MEDIA_ROOT: Path = BASE_DIR / 'media'
+
+DEFAULT_AUTO_FIELD: str = 'django.db.models.BigAutoField'
+
+LOGS_DIR: Path = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+LOGGING: dict = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': str(LOGS_DIR / 'blog_api.log'),
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+}
+
+UNFOLD: dict = {
+    'SITE_TITLE': 'Blog API Admin',
+    'SITE_HEADER': 'Blog API Administration',
+    'SITE_SUBHEADER': 'Content & Community Management',
+    'SITE_SYMBOL': 'article',
+    'COLORS': {
+        'primary': {
+            '50': 'oklch(97.9% .021 166.113)',
+            '100': 'oklch(95% .052 163.051)',
+            '200': 'oklch(90.5% .093 164.15)',
+            '300': 'oklch(84.5% .143 164.978)',
+            '400': 'oklch(76.5% .177 163.223)',
+            '500': 'oklch(69.6% .17 162.48)',
+            '600': 'oklch(59.6% .145 163.225)',
+            '700': 'oklch(50.8% .118 165.612)',
+            '800': 'oklch(43.2% .095 166.913)',
+            '900': 'oklch(37.8% .077 168.94)',
+            '950': 'oklch(26.2% .051 172.552)',
+        },
+    },
+    'ENVIRONMENT': 'apps.blog.callbacks.environment_callback',
+    'SITE_DROPDOWN': [
+        {
+            'icon': 'code',
+            'title': 'GitHub Repository',
+            'link': 'https://github.com/7Aza77/blog_api',
+        },
+        {
+            'icon': 'menu_book',
+            'title': 'Unfold Documentation',
+            'link': 'https://unfoldadmin.com/docs/',
+        },
+    ],
+    'COMMAND': {
+        'search_models': True,
+    },
+    'SIDEBAR': {
+        'show_search': True,
+        'show_all_applications': False,
+        'navigation': [
+            {
+                'title': 'Overview',
+                'items': [
+                    {
+                        'title': 'Dashboard',
+                        'icon': 'dashboard',
+                        'link': reverse_lazy('admin:index'),
+                    },
+                ],
+            },
+            {
+                'title': 'Content',
+                'items': [
+                    {
+                        'title': 'Posts',
+                        'icon': 'article',
+                        'link': reverse_lazy('admin:blog_post_changelist'),
+                        'badge': 'apps.blog.callbacks.drafts_badge',
+                    },
+                    {
+                        'title': 'Comments',
+                        'icon': 'comment',
+                        'link': reverse_lazy('admin:blog_comment_changelist'),
+                    },
+                    {
+                        'title': 'Categories',
+                        'icon': 'category',
+                        'link': reverse_lazy('admin:blog_category_changelist'),
+                    },
+                    {
+                        'title': 'Tags',
+                        'icon': 'label',
+                        'link': reverse_lazy('admin:blog_tag_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': 'Users & Access',
+                'permission': lambda request: request.user.is_superuser,
+                'items': [
+                    {
+                        'title': 'Users',
+                        'icon': 'people',
+                        'link': reverse_lazy('admin:auths_user_changelist'),
+                    },
+                    {
+                        'title': 'Groups',
+                        'icon': 'group',
+                        'link': reverse_lazy('admin:auth_group_changelist'),
+                    },
+                ],
+            },
+        ],
+    },
+    'TABS': [
+        {
+            'models': [
+                'blog.post',
+            ],
+            'items': [
+                {
+                    'title': 'All',
+                    'link': reverse_lazy('admin:blog_post_changelist'),
+                },
+                {
+                    'title': 'Published',
+                    'link': lambda request: (
+                        str(reverse_lazy('admin:blog_post_changelist')) + '?status__exact=published'
+                    ),
+                },
+                {
+                    'title': 'Drafts',
+                    'link': lambda request: (
+                        str(reverse_lazy('admin:blog_post_changelist')) + '?status__exact=draft'
+                    ),
+                },
+            ],
+        },
+    ],
+}
+
+
+--------------------------------------------------------------------------------
+FILE: apps/auths/forms.py  (NEW FILE)
+(custom Unfold forms for user creation, change, and password change without
+username field)
+--------------------------------------------------------------------------------
+from django.contrib.auth import get_user_model
+from unfold.forms import AdminPasswordChangeForm as UnfoldAdminPasswordChangeForm
+from unfold.forms import UserChangeForm as UnfoldUserChangeForm
+from unfold.forms import UserCreationForm as UnfoldUserCreationForm
+
+User = get_user_model()
+
+
+class CustomUserCreationForm(UnfoldUserCreationForm):
+    """User creation form for Unfold admin without username requirement."""
+
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name')
+
+
+class CustomUserChangeForm(UnfoldUserChangeForm):
+    """User change form for Unfold admin without username requirement."""
+
+    class Meta:
+        model = User
+        fields = '__all__'
+
+
+class CustomAdminPasswordChangeForm(UnfoldAdminPasswordChangeForm):
+    """Password change form for custom user in Unfold admin."""
+
+    pass
+
+
+--------------------------------------------------------------------------------
+FILE: apps/auths/admin.py
+(replaced default UserAdmin with Unfold UserAdmin; added Group re-registration,
+show_header/show_is_active/show_is_staff/show_posts_count display columns,
+BooleanRadioFilter, tabbed fieldsets, annotated queryset)
+--------------------------------------------------------------------------------
+from django.contrib import admin
+from django.contrib.auth.models import Group
+from django.db.models import Count, QuerySet
+from django.http import HttpRequest
+from unfold.admin import ModelAdmin
+from unfold.contrib.filters.admin import BooleanRadioFilter
+from unfold.decorators import display
+
+from apps.auths.forms import (
+    CustomAdminPasswordChangeForm,
+    CustomUserChangeForm,
+    CustomUserCreationForm,
+)
+from apps.auths.models import User
+
+admin.site.unregister(Group)
+
+
+@admin.register(Group)
+class GroupAdmin(ModelAdmin):
+    """Group model admin configured for Unfold."""
+
+    pass
+
+
+@admin.register(User)
+class UserAdmin(ModelAdmin):
+    """Custom user model admin configured for Unfold."""
+
+    form = CustomUserChangeForm
+    add_form = CustomUserCreationForm
+    change_password_form = CustomAdminPasswordChangeForm
+
+    list_display = (
+        'show_header',
+        'show_is_active',
+        'show_is_staff',
+        'show_posts_count',
+    )
+    list_filter = (
+        ('is_active', BooleanRadioFilter),
+        ('is_staff', BooleanRadioFilter),
+    )
+    search_fields = ('email', 'first_name', 'last_name')
+    ordering = ('email',)
+
+    fieldsets = (
+        (
+            'Personal info',
+            {
+                'classes': ('tab',),
+                'fields': ('email', 'first_name', 'last_name'),
+            },
+        ),
+        (
+            'Permissions',
+            {
+                'classes': ('tab',),
+                'fields': (
+                    'is_active',
+                    'is_staff',
+                    'is_superuser',
+                    'groups',
+                    'user_permissions',
+                ),
+            },
+        ),
+        (
+            'Important dates',
+            {
+                'classes': ('tab',),
+                'fields': ('last_login',),
+            },
+        ),
+    )
+
+    add_fieldsets = (
+        (
+            None,
+            {
+                'classes': ('wide',),
+                'fields': ('email', 'first_name', 'last_name', 'password1', 'password2'),
+            },
+        ),
+    )
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet[User]:
+        """Annotate queryset with related posts count."""
+        return super().get_queryset(request).annotate(posts_count=Count('posts'))
+
+    @display(description='User', header=True)
+    def show_header(self, obj: User) -> tuple[str, str, str]:
+        """Display composite header with full name, email, and initials circle."""
+        full_name = obj.get_full_name() or obj.email
+        initials = f'{obj.first_name[:1]}{obj.last_name[:1]}'.upper() or 'U'
+        return full_name, obj.email, initials
+
+    @display(
+        description='Active',
+        label={
+            True: 'success',
+            False: 'danger',
+        },
+    )
+    def show_is_active(self, obj: User) -> bool:
+        """Display colored active status label."""
+        return obj.is_active
+
+    @display(
+        description='Staff',
+        label={
+            True: 'info',
+            False: 'warning',
+        },
+    )
+    def show_is_staff(self, obj: User) -> bool:
+        """Display colored staff status label."""
+        return obj.is_staff
+
+    @display(description='Posts', ordering='posts_count')
+    def show_posts_count(self, obj: User) -> int:
+        """Display annotated posts count with column sorting."""
+        return getattr(obj, 'posts_count', 0)
+
+    # TODO(hw2): bulk action to activate selected users
+    # TODO(hw2): bulk action to deactivate selected users
+
+
+--------------------------------------------------------------------------------
+FILE: apps/blog/callbacks.py  (NEW FILE)
+(environment badge callback for Unfold ENVIRONMENT setting,
+drafts count badge for sidebar Posts item,
+TODO markers for dashboard step)
+--------------------------------------------------------------------------------
+from django.http import HttpRequest
+
+from apps.blog.models import Post, PostStatus
+from settings import conf
+
+
+def environment_callback(request: HttpRequest) -> list[str]:
+    """Return environment badge text and style color for Unfold navigation."""
+    if conf.ENV_ID == 'local':
+        return ['Local', 'warning']
+    return ['Production', 'danger']
+
+
+def drafts_badge(request: HttpRequest) -> int:
+    """Return number of draft posts for display on Posts sidebar item."""
+    return Post.objects.filter(status=PostStatus.DRAFT).count()
+
+
+# TODO(hw2): dashboard callback function to supply statistics context for admin index
+# TODO(hw2): dashboard cards component for total users, published posts, drafts, and comments
+# TODO(hw2): dashboard bar chart component for number of posts per category
+# TODO(hw2): dashboard table component displaying top 5 authors by number of posts
+# TODO(hw2): dashboard progress bars component for share of published vs draft posts
+
+
+--------------------------------------------------------------------------------
+FILE: apps/blog/constants.py
+(added COMMENT_BODY_TRUNCATE_LENGTH constant used in CommentAdmin.short_body)
+--------------------------------------------------------------------------------
+CATEGORY_NAME_MAX_LENGTH: int = 100
+CATEGORY_SLUG_MAX_LENGTH: int = 100
+
+TAG_NAME_MAX_LENGTH: int = 50
+TAG_SLUG_MAX_LENGTH: int = 50
+
+POST_TITLE_MAX_LENGTH: int = 200
+POST_SLUG_MAX_LENGTH: int = 200
+POST_STATUS_MAX_LENGTH: int = 20
+
+COMMENT_BODY_TRUNCATE_LENGTH: int = 50   # <-- added in hw2
+
+
+--------------------------------------------------------------------------------
+FILE: apps/blog/admin.py
+(completely replaced: CategoryAdmin with posts count + TableSection row,
+TagAdmin with posts count, CommentAdmin with autocomplete filters and
+short_body display, PostAdmin stub with 26 TODO(hw2) markers)
+--------------------------------------------------------------------------------
+from django.contrib import admin
+from django.db.models import Count, QuerySet
+from django.http import HttpRequest
+from unfold.admin import ModelAdmin
+from unfold.contrib.filters.admin import AutocompleteSelectFilter, RangeDateTimeFilter
+from unfold.decorators import display
+from unfold.sections import TableSection
+
+from apps.blog.constants import COMMENT_BODY_TRUNCATE_LENGTH
+from apps.blog.models import Category, Comment, Post, Tag
+
+
+class CategoryPostSection(TableSection):
+    """Expandable row section showing category posts in a table."""
+
+    verbose_name = 'Posts'
+    related_name = 'posts'
+    fields = ['title', 'author', 'status', 'created_at']
+
+
+@admin.register(Category)
+class CategoryAdmin(ModelAdmin):
+    """Category model admin configured for Unfold."""
+
+    list_display = ('name', 'slug', 'show_posts_count')
+    search_fields = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+    list_sections = [CategoryPostSection]
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Category]:
+        """Annotate categories with total related posts count."""
+        return super().get_queryset(request).annotate(posts_count=Count('posts'))
+
+    @display(description='Posts', ordering='posts_count')
+    def show_posts_count(self, obj: Category) -> int:
+        """Display sortable posts count column."""
+        return getattr(obj, 'posts_count', 0)
+
+
+@admin.register(Tag)
+class TagAdmin(ModelAdmin):
+    """Tag model admin configured for Unfold."""
+
+    list_display = ('name', 'slug', 'show_posts_count')
+    search_fields = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Tag]:
+        """Annotate tags with total related posts count."""
+        return super().get_queryset(request).annotate(posts_count=Count('posts'))
+
+    @display(description='Posts', ordering='posts_count')
+    def show_posts_count(self, obj: Tag) -> int:
+        """Display sortable posts count column."""
+        return getattr(obj, 'posts_count', 0)
+
+
+@admin.register(Comment)
+class CommentAdmin(ModelAdmin):
+    """Comment model admin configured for Unfold with autocomplete filters."""
+
+    list_display = ('post_title', 'author', 'short_body', 'created_at')
+    list_filter = [
+        ('post', AutocompleteSelectFilter),
+        ('author', AutocompleteSelectFilter),
+        ('created_at', RangeDateTimeFilter),
+    ]
+    list_filter_submit = True
+    search_fields = ('body', 'author__email', 'post__title')
+    autocomplete_fields = ('post', 'author')
+    list_select_related = ('post', 'author')
+
+    @display(description='Post', ordering='post__title')
+    def post_title(self, obj: Comment) -> str:
+        """Display title of the commented post."""
+        return obj.post.title
+
+    @display(description='Body')
+    def short_body(self, obj: Comment) -> str:
+        """Display shortened body text limited to constant length."""
+        if len(obj.body) > COMMENT_BODY_TRUNCATE_LENGTH:
+            return f'{obj.body[:COMMENT_BODY_TRUNCATE_LENGTH]}...'
+        return obj.body
+
+
+@admin.register(Post)
+class PostAdmin(ModelAdmin):
+    """Post model admin stub for Unfold with TODO markers for remaining features."""
+
+    list_display = ('title', 'author', 'status', 'created_at')
+    search_fields = ('title',)
+
+    # TODO(hw2): header column displaying title and author
+    # TODO(hw2): colored status label (published green, draft orange)
+    # TODO(hw2): category dropdown column in changelist
+    # TODO(hw2): tags dropdown column in changelist
+    # TODO(hw2): sortable comments count column with annotate
+    # TODO(hw2): status dropdown filter in changelist
+    # TODO(hw2): category dropdown filter in changelist
+    # TODO(hw2): tags multiple choice filter in changelist
+    # TODO(hw2): author autocomplete filter in changelist
+    # TODO(hw2): created_at date range filter in changelist
+    # TODO(hw2): list_filter_submit button for filters
+    # TODO(hw2): search by body and author email
+    # TODO(hw2): expandable row showing comments of the post via list_sections
+    # TODO(hw2): select_related and prefetch_related optimization to eliminate N+1 queries
+    # TODO(hw2): bulk actions to publish selected posts and move to drafts
+    # TODO(hw2): row action to publish or unpublish individual post
+    # TODO(hw2): list action above list to publish all drafts
+    # TODO(hw2): detail action on post page to open comments
+    # TODO(hw2): submit-line action to save and publish post
+    # TODO(hw2): tabbed edit form with Content, Classification, and Meta tabs
+    # TODO(hw2): prepopulated slug field from title
+    # TODO(hw2): autocomplete fields for author, category, and tags in form
+    # TODO(hw2): WYSIWYG editor widget for post body field
+    # TODO(hw2): read-only created_at and updated_at date fields in edit form
+    # TODO(hw2): warn_unsaved_form enabled on edit form
+    # TODO(hw2): comments inline displayed in its own tab with 10 per page
+
+
+--------------------------------------------------------------------------------
+FILE: apps/blog/management/commands/seed.py  (NEW FILE)
+--------------------------------------------------------------------------------
+import random
+import time
+from typing import Any
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+from django.core.management.base import BaseCommand, CommandError, CommandParser
+from django.utils.text import slugify
+from faker import Faker
+
+from apps.blog.models import Category, Comment, Post, PostStatus, Tag
+
+User = get_user_model()
+
+DEFAULT_USERS: int = 20
+DEFAULT_POSTS: int = 100
+DEFAULT_COMMENTS: int = 500
+SEED_PASSWORD: str = 'password123'
+
+PUBLISHED_RATIO: float = 0.70
+NO_CATEGORY_RATIO: float = 0.10
+INACTIVE_USER_RATIO: float = 0.15
+STAFF_USER_RATIO: float = 0.15
+
+MIN_TAGS_PER_POST: int = 0
+MAX_TAGS_PER_POST: int = 5
+POST_PARAGRAPHS_COUNT: int = 3
+MIN_COMMENT_SENTENCES: int = 1
+MAX_COMMENT_SENTENCES: int = 3
+
+CATEGORIES: list[str] = [
+    'Python',
+    'Django',
+    'DevOps',
+    'Web Development',
+    'Machine Learning',
+    'Architecture',
+    'Databases',
+    'Testing',
+]
+
+TAGS: list[str] = [
+    'django',
+    'python',
+    'postgresql',
+    'docker',
+    'api',
+    'rest',
+    'unfold',
+    'orm',
+    'testing',
+    'celery',
+    'redis',
+    'fastapi',
+    'git',
+    'devops',
+    'frontend',
+    'backend',
+    'security',
+    'performance',
+    'sql',
+    'clean-code',
+]
+
+
+class Command(BaseCommand):
+    """Management command to populate database with realistic fake data."""
+
+    help = 'Fill the database with fake data.'
+
+    def add_arguments(self, parser: CommandParser) -> None:
+        """Register CLI arguments for seeding counts and data clearing."""
+        parser.add_argument(
+            '--users',
+            type=int,
+            default=DEFAULT_USERS,
+            help='Number of users to create',
+        )
+        parser.add_argument(
+            '--posts',
+            type=int,
+            default=DEFAULT_POSTS,
+            help='Number of posts to create',
+        )
+        parser.add_argument(
+            '--comments',
+            type=int,
+            default=DEFAULT_COMMENTS,
+            help='Number of comments to create',
+        )
+        parser.add_argument(
+            '--clear',
+            action='store_true',
+            help='Delete existing data before seeding',
+        )
+
+    def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the database seeding workflow."""
+        users_count: int = options['users']
+        posts_count: int = options['posts']
+        comments_count: int = options['comments']
+        clear: bool = options['clear']
+
+        if users_count < 0 or posts_count < 0 or comments_count < 0:
+            raise CommandError('Counts must be non-negative numbers.')
+
+        start_time: float = time.perf_counter()
+        fake: Faker = Faker()
+
+        if clear:
+            Comment.objects.all().delete()
+            Post.objects.all().delete()
+            Tag.objects.all().delete()
+            Category.objects.all().delete()
+            User.objects.filter(is_superuser=False).delete()
+
+        existing_users: list[Any] = list(User.objects.all())
+        if users_count == 0 and not existing_users and (posts_count > 0 or comments_count > 0):
+            raise CommandError('Cannot create posts or comments without users.')
+
+        # 1. Categories
+        existing_cat_names: set[str] = set(Category.objects.values_list('name', flat=True))
+        categories_to_create: list[Category] = [
+            Category(name=name, slug=slugify(name))
+            for name in CATEGORIES
+            if name not in existing_cat_names
+        ]
+        if categories_to_create:
+            Category.objects.bulk_create(categories_to_create)
+        all_categories: list[Category] = list(Category.objects.all())
+
+        # 2. Tags
+        existing_tag_names: set[str] = set(Tag.objects.values_list('name', flat=True))
+        tags_to_create: list[Tag] = [
+            Tag(name=name, slug=slugify(name)) for name in TAGS if name not in existing_tag_names
+        ]
+        if tags_to_create:
+            Tag.objects.bulk_create(tags_to_create)
+        all_tags: list[Tag] = list(Tag.objects.all())
+
+        # 3. Users
+        hashed_password: str = make_password(SEED_PASSWORD)
+        used_emails: set[str] = set(User.objects.values_list('email', flat=True))
+        users_to_create: list[Any] = []
+
+        for _ in range(users_count):
+            first_name: str = fake.first_name()
+            last_name: str = fake.last_name()
+            email_base: str = f'{first_name.lower()}.{last_name.lower()}@example.com'
+            email: str = email_base
+            suffix: int = 1
+            while email in used_emails:
+                suffix += 1
+                email = f'{first_name.lower()}.{last_name.lower()}{suffix}@example.com'
+            used_emails.add(email)
+
+            is_staff: bool = random.random() < STAFF_USER_RATIO
+            is_active: bool = random.random() >= INACTIVE_USER_RATIO
+
+            users_to_create.append(
+                User(
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    password=hashed_password,
+                    is_staff=is_staff,
+                    is_active=is_active,
+                )
+            )
+
+        created_users: list[Any] = User.objects.bulk_create(users_to_create)
+        available_users: list[Any] = existing_users + created_users
+
+        # 4. Posts
+        if posts_count > 0 and not available_users:
+            raise CommandError('Cannot create posts without users.')
+
+        used_slugs: set[str] = set(Post.objects.values_list('slug', flat=True))
+        posts_to_create: list[Post] = []
+        post_tags_mapping: list[list[Tag]] = []
+
+        for _ in range(posts_count):
+            author = random.choice(available_users)
+            title: str = fake.sentence(nb_words=6).rstrip('.')
+            base_slug: str = slugify(title)
+            if not base_slug:
+                base_slug = f'post-{random.randint(1000, 999999)}'
+            slug: str = base_slug
+            suffix: int = 1
+            while slug in used_slugs:
+                suffix += 1
+                slug = f'{base_slug}-{suffix}'
+            used_slugs.add(slug)
+
+            body: str = '\n\n'.join(fake.paragraphs(nb=POST_PARAGRAPHS_COUNT))
+            category: Category | None = None
+            if all_categories and random.random() >= NO_CATEGORY_RATIO:
+                category = random.choice(all_categories)
+
+            status: str = (
+                PostStatus.PUBLISHED if random.random() < PUBLISHED_RATIO else PostStatus.DRAFT
+            )
+
+            posts_to_create.append(
+                Post(
+                    author=author,
+                    title=title,
+                    slug=slug,
+                    body=body,
+                    category=category,
+                    status=status,
+                )
+            )
+
+            if all_tags:
+                tag_count: int = random.randint(
+                    MIN_TAGS_PER_POST, min(MAX_TAGS_PER_POST, len(all_tags))
+                )
+                chosen_tags: list[Tag] = random.sample(all_tags, tag_count)
+            else:
+                chosen_tags = []
+            post_tags_mapping.append(chosen_tags)
+
+        created_posts: list[Post] = Post.objects.bulk_create(posts_to_create)
+        for post, tags in zip(created_posts, post_tags_mapping, strict=False):
+            if tags:
+                post.tags.set(tags)
+
+        # 5. Comments
+        published_posts: list[Post] = list(Post.objects.filter(status=PostStatus.PUBLISHED))
+        if comments_count > 0 and not published_posts:
+            raise CommandError('Cannot create comments because there are no published posts.')
+
+        comments_to_create: list[Comment] = []
+        if published_posts and available_users:
+            for _ in range(comments_count):
+                post = random.choice(published_posts)
+                author = random.choice(available_users)
+                sentence_count: int = random.randint(MIN_COMMENT_SENTENCES, MAX_COMMENT_SENTENCES)
+                body: str = ' '.join(fake.sentences(nb=sentence_count))
+
+                comments_to_create.append(
+                    Comment(
+                        post=post,
+                        author=author,
+                        body=body,
+                    )
+                )
+
+        Comment.objects.bulk_create(comments_to_create)
+
+        elapsed: float = time.perf_counter() - start_time
+
+        self.stdout.write(self.style.SUCCESS(f'Users:       {len(created_users):>5} created'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Categories:  {len(categories_to_create):>5} created')
+        )
+        self.stdout.write(self.style.SUCCESS(f'Tags:        {len(tags_to_create):>5} created'))
+        self.stdout.write(self.style.SUCCESS(f'Posts:       {len(created_posts):>5} created'))
+        self.stdout.write(self.style.SUCCESS(f'Comments:    {len(comments_to_create):>5} created'))
+        self.stdout.write(self.style.SUCCESS(f'Done in {elapsed:.2f} seconds'))
+
+
+================================================================================
+ my file - (empty / placeholder)
+
+docs/screenshots/.gitkeep   -- empty placeholder for admin screenshots directory
+
+

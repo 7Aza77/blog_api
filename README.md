@@ -19,14 +19,15 @@ RESTful API backend for a modern blogging platform built with Django and Django 
 ```text
 blog_api/
 ├── apps/
-│   ├── auths/             # Custom user model, managers
-│   └── blog/              # Categories, tags, posts, comments
+│   ├── auths/             # Custom user model, managers, forms, admin
+│   └── blog/              # Categories, tags, posts, comments, seed command
 ├── docs/
-│   └── erd.svg            # Architecture entity relationship diagram
+│   ├── erd.svg            # Architecture entity relationship diagram
+│   └── screenshots/       # Admin panel interface screenshots
 ├── logs/                  # Application runtime log files
 ├── requirements/
-│   ├── base.txt           # Core project dependencies
-│   ├── dev.txt            # Development tooling (ruff, faker)
+│   ├── base.txt           # Core project dependencies (Django, Unfold, DRF, Decouple)
+│   ├── dev.txt            # Development tooling (Ruff, Faker)
 │   └── prod.txt           # Production packages (psycopg2-binary)
 ├── settings/
 │   ├── env/
@@ -34,7 +35,7 @@ blog_api/
 │   │   └── prod.py        # Production environment configuration (PostgreSQL)
 │   ├── .env.example       # Template for environment variables
 │   ├── asgi.py            # ASGI application entrypoint
-│   ├── base.py            # Shared settings across environments
+│   ├── base.py            # Shared settings, Unfold configuration
 │   ├── conf.py            # Decouple configuration parser
 │   ├── urls.py            # Root URL routing
 │   └── wsgi.py            # WSGI application entrypoint
@@ -90,6 +91,33 @@ python manage.py createsuperuser
 ```bash
 python manage.py runserver
 ```
+
+## Seeding
+
+Populate the database with realistic fake data using the `seed` management command:
+
+```bash
+python manage.py seed
+```
+
+### Arguments
+
+| Argument | Default | Description |
+|---|---|---|
+| `--users` | `20` | Number of users to create |
+| `--posts` | `100` | Number of posts to create |
+| `--comments` | `500` | Number of comments to create |
+| `--clear` | off | Delete existing data before seeding (preserves superusers) |
+
+### Example
+
+```bash
+python manage.py seed --users 50 --posts 300 --comments 1500
+```
+
+## Admin
+
+<!-- TODO(hw2): add screenshots in docs/screenshots/ (dashboard, post list with filters open, post edit page, user list) -->
 
 ## Quality and Testing
 
